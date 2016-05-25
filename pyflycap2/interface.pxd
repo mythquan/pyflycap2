@@ -29,6 +29,7 @@ cdef class Camera(CameraContext):
     cdef public object connected
 
     cdef fc2Image image
+    cdef fc2Image rgb_image
 
     cdef image_callback(self, fc2Image *image)
     cpdef get_current_image_config(self)

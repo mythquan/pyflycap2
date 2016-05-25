@@ -149,3 +149,12 @@ cdef list fc2_modes = [
     FC2_MODE_30,
     FC2_MODE_31
 ]
+_PROPERTIES = dict(brightness = FC2_BRIGHTNESS,
+                   sharpness  = FC2_SHARPNESS,
+                   hue = FC2_HUE,
+                   saturation = FC2_SATURATION,
+                   gamma = FC2_GAMMA,
+                   shutter = FC2_SHUTTER,
+                   gain = FC2_GAIN,
+                   white_balance = FC2_WHITE_BALANCE,
+                   frame_rate = FC2_FRAME_RATE)

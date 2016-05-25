@@ -17,47 +17,25 @@ try:
 except ImportError:
     have_cython = False
     cmdclass = {}
-
-def get_wheel_data():
-    data = []
-    deps = environ.get('PYFLYCAP2_WHEEL_DEPS')
-    if deps and isdir(deps):
-        data.append(
-            ('share/pyflycap2/flycapture2/bin',
-             [join(deps, f) for f in listdir(deps)]
-            )
-        )
-    return data
-
-libraries = ['FlyCapture2_C_v110', 'FlyCapture2GUI_C_v110']
-include_dirs = []
-library_dirs = []
-
-include = environ.get('PYFLYCAP2_INCLUDE')
-if include:
-    include_dirs.append(include)
-
-lib = environ.get('PYFLYCAP2_LIB')
-if lib:
-    library_dirs.append(lib)
-
+if os.name=='posix':
+    include_dirs='/usr/include/flycapture'
+    libraries='flycapture-c'
+    library_dirs='/usr/lib'
+    data_files=[]
 
 mods = ['interface']
-extra_compile_args = ["-O3", '-fno-strict-aliasing']
+extra_compile_args = ["-O2", '-fno-strict-aliasing']
 mod_suffix = '.pyx' if have_cython else '.c'
-include_dirs.append(join(abspath(dirname(__file__)), 'pyflycap2', 'includes'))
+    
 
 ext_modules = [Extension(
     'pyflycap2.' + src_file,
-    sources=[join('pyflycap2', src_file + mod_suffix)], libraries=libraries,
-    include_dirs=include_dirs, library_dirs=library_dirs,
+    sources=[join('pyflycap2', src_file + mod_suffix)],
+    libraries=['flycapture-c', 'flycapturegui-c'],
+    include_dirs=[include_dirs], library_dirs=[library_dirs],
     extra_compile_args=extra_compile_args) for src_file in mods]
 
-for e in ext_modules:
-    e.cython_directives = {"embedsignature": True}
 
-with open('README.rst') as fh:
-    long_description = fh.read()
 
 setup(
     name='pyflycap2',
@@ -66,7 +44,6 @@ setup(
     license='MIT',
     description='Cython bindings for Point Gray Fly Capture 2.',
     url='http://matham.github.io/pyflycap2/',
-    long_description=long_description,
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Topic :: Multimedia :: Graphics :: Capture :: Digital Camera',
@@ -79,5 +56,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Intended Audience :: Developers'],
     packages=['pyflycap2'],
-    data_files=get_wheel_data(),
+    data_files=data_files,
     cmdclass=cmdclass, ext_modules=ext_modules)
+

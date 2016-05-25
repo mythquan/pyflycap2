@@ -13,6 +13,7 @@ from cpython.ref cimport PyObject
 import logging
 from collections import namedtuple
 
+import numpy as np
 
 cdef void image_event_callback(fc2Image *image, void *callback_data) nogil:
     with gil:
@@ -248,6 +249,7 @@ cdef class Camera(CameraContext):
     def __dealloc__(self):
         with nogil:
             fc2DestroyImage(&self.image)
+            fc2DestroyImage(&self.rgb_image)
 
     def is_controlable(self):
         cdef BOOL controlable = 0
@@ -538,6 +540,7 @@ cdef class Camera(CameraContext):
         if not self.connected:
             with nogil:
                 check_ret(fc2CreateImage(&self.image))
+                check_ret(fc2CreateImage(&self.rgb_image))
                 check_ret(fc2Connect(self.context, &self._guid))
             self.connected = True
 
@@ -546,6 +549,7 @@ cdef class Camera(CameraContext):
             with nogil:
                 check_ret(fc2Disconnect(self.context))
                 check_ret(fc2DestroyImage(&self.image))
+                check_ret(fc2DestroyImage(&self.rgb_image))
             self.connected = False
 
     cdef image_callback(self, fc2Image *image):
@@ -610,7 +614,6 @@ cdef class Camera(CameraContext):
                 memcpy(dest, src, self.image.dataSize)
         res['buffer'] = buffer
         return res
-
     def save_current_image(self, filename, ext='auto'):
         cdef bytes fname = filename if isinstance(filename, bytes) else filename.encode('utf8')
         cdef char *cname = fname
@@ -618,10 +621,83 @@ cdef class Camera(CameraContext):
         if ext not in image_file_types:
             raise ValueError('"{}" not found in allowed values {}'.format(
                 ext, ', '.join(['"{}"'.format(k) for k in image_file_types.keys()])))
-
         format = image_file_types[ext]
         with nogil:
             check_ret(fc2SaveImage(&self.image, cname, format))
+
+    def grab_image_to_disk(self, filename, ext='auto'):
+        cdef bytes fname = filename if isinstance(filename, bytes) else filename.encode('utf8')
+        cdef char *cname = fname
+        cdef fc2ImageFileFormat format
+        if ext not in image_file_types:
+            raise ValueError('"{}" not found in allowed values {}'.format(
+                ext, ', '.join(['"{}"'.format(k) for k in image_file_types.keys()])))
+
+        with nogil:
+            check_ret(fc2RetrieveBuffer(self.context, &self.image))
+        with nogil:
+            ch_ret = (fc2ConvertImageTo(FC2_PIXEL_FORMAT_RGB, &self.image, &self.rgb_image))
+        format = image_file_types[ext]
+        with nogil:
+            check_ret(fc2SaveImage(&self.rgb_image, cname, format))
+
+    def grab_numpy_image(self, format='bgr'):
+        """return an image as a NumPy array
+        optionally specifying color
+        """
+        ncols, nrows = self.image.cols, self.image.rows
+        size = ncols * nrows
+        if format == 'bgr':
+            with nogil:
+                check_ret(fc2ConvertImageTo(FC2_PIXEL_FORMAT_BGR, &self.image, &self.rgb_image))
+            bytes = bytearray(self.rgb_image.pData[:3*size])
+            img = np.array(bytes).reshape(nrows, ncols, 3)
+        elif format == 'rgb':
+            with nogil:
+                check_ret(fc2ConvertImageTo(FC2_PIXEL_FORMAT_RGB8, &self.image, &self.rgb_image))
+            bytes = bytearray(self.rgb_image.pData[:3*size])
+            img = np.array(bytes).reshape(nrows, ncols, 3)
+        elif format == 'gray':
+            with nogil:
+                check_ret(fc2ConvertImageTo(FC2_PIXEL_FORMAT_MONO8, &self.image, &self.rgb_image))
+            bytes = bytearray(self.rgb_image.pData[:size])
+            img = np.array(bytes).reshape(nrows, ncols)
+        else:
+            raise ValueError("Invalid argument: format='%s'. Expected 'bgr', 'rgb', or 'gray'." % format)
+        return img
+
+    def get_property(self, name):
+        cdef fc2Property p
+        p.type = _PROPERTIES[name]
+        check_ret( fc2GetProperty(self.context, &p))
+        return {"type": p.type,
+                "present": bool(p.present),
+                "autoManualMode": bool(p.autoManualMode),
+                "absControl": bool(p.absControl),
+                "onOff": bool(p.onOff),
+                "onePush": bool(p.onePush),
+                "absValue": p.absValue,
+                "valueA": p.valueA,
+                "valueB": p.valueB}
+
+    def set_property_value(self, name, value, auto=False, absolute=True):
+        cdef fc2Property p
+        if name not in _PROPERTIES:
+            return None
+        p.type = _PROPERTIES[name]
+        check_ret( fc2GetProperty(self.context, &p))
+        p.onOff = True
+        p.autoManualMode = auto
+
+        if p.type == FC2_WHITE_BALANCE:
+            p.valueA = value[0]
+            p.valueB = value[1]
+            p.absValue = 0.0
+            p.absControl = False
+        else:
+            p.absValue = value
+            p.absControl = absolute
+        check_ret( fc2SetProperty(self.context, &p))
 
 
 cdef class GUI(object):
