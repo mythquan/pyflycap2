@@ -12,6 +12,9 @@ from cpython.ref cimport PyObject
 
 import logging
 from collections import namedtuple
+import ConfigParser
+
+cf = ConfigParser.ConfigParser()
 
 import numpy as np
 
@@ -35,7 +38,9 @@ cdef class CameraContext(object):
         Can be one of `IIDC` or `GigE`.
     '''
 
-    def __cinit__(self, context_type='GigE', **kwargs):
+    def __cinit__(self, **kwargs):
+        context_type = cf.get('ctx', 'ctx_type')
+        print "context_type", context_type
         self.context = NULL
         self.context_type = context_type
         if context_type == 'GigE':
@@ -48,6 +53,7 @@ cdef class CameraContext(object):
             raise Exception(
                 'Cannot recognize camera type "{}". Valid values are '
                 '"GigE" or "IIDC".'.format(context_type))
+
 
     def __dealloc__(self):
         if self.context != NULL:
@@ -206,7 +212,7 @@ cdef class Camera(CameraContext):
             with nogil:
                 check_ret(fc2GetCameraFromIPAddress(self.context, _ip, &self._guid))
         elif serial is not None:
-            self.serial = serial
+            self.serial = int(serial[0])
             with nogil:
                 check_ret(fc2GetCameraFromSerialNumber(self.context, self.serial, &self._guid))
         else:
@@ -243,6 +249,8 @@ cdef class Camera(CameraContext):
             self.mac_address = [self.cam_info.macAddress.octets[i] for i in range(6)]
         else:
             self.interface_type = 'unknown'
+
+        print 'interface_type', self.interface_type
 
         # check_ret(fc2SetCallback(self.context, <fc2ImageEventCallback>image_event_callback, <PyObject*>self))
 
@@ -543,6 +551,7 @@ cdef class Camera(CameraContext):
                 check_ret(fc2CreateImage(&self.rgb_image))
                 check_ret(fc2Connect(self.context, &self._guid))
             self.connected = True
+            print 'connected', self.connected
 
     def disconnect(self):
         if self.connected:
@@ -558,6 +567,7 @@ cdef class Camera(CameraContext):
     def start_capture(self):
         with nogil:
             check_ret(fc2StartCapture(self.context))
+        print 'start_capture', True
 
     def start_capture_sync(self, other_cams):
         cdef list cams = [self] + list(other_cams)
@@ -748,3 +758,6 @@ cdef class GUI(object):
         if selected:
             return bool(selected), [[guid[i].value[j] for j in range(4)] for i in range(s)]
         return False, []
+
+def init_conf(conf_path):
+    cf.read(conf_path)

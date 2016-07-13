@@ -44,17 +44,6 @@ setup(
     license='MIT',
     description='Cython bindings for Point Gray Fly Capture 2.',
     url='http://matham.github.io/pyflycap2/',
-    classifiers=[
-        'License :: OSI Approved :: MIT License',
-        'Topic :: Multimedia :: Graphics :: Capture :: Digital Camera',
-        'Topic :: Multimedia :: Graphics :: Capture',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX :: Linux',
-        'Intended Audience :: Developers'],
     packages=['pyflycap2'],
     data_files=data_files,
     cmdclass=cmdclass, ext_modules=ext_modules)
