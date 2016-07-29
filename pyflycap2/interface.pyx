@@ -676,6 +676,18 @@ cdef class Camera(CameraContext):
             raise ValueError("Invalid argument: format='%s'. Expected 'bgr', 'rgb', or 'gray'." % format)
         return img
 
+    def get_configuration(self):
+        cdef fc2Config conf
+        check_ret(fc2GetConfiguration(self.context, &conf))
+        print conf.numBuffers
+
+    def set_configuration(self, numbf):
+        cdef fc2Config conf
+        check_ret(fc2GetConfiguration(self.context, &conf))
+        conf.numBuffers = numbf
+        check_ret(fc2SetConfiguration(self.context, &conf))
+
+
     def get_property(self, name):
         cdef fc2Property p
         p.type = _PROPERTIES[name]

@@ -5,8 +5,8 @@ import pyflycap2.interface as flycap
 if __name__ == '__main__':
     fname1 = "Capture.png"
     fname2 = "Capture2.png"
-    flycap.init_conf('/home/lee/PycharmProjects/Test_pro/interface.conf')
-    cam = flycap.Camera(serial=[15631910], ctx_type='IIDC')  # other = GigE
+    flycap.init_conf('.//interface.conf')
+    cam = flycap.Camera(serial=[15631910])  # other = GigE
     # print cam.get_num_cameras()
     cam.connect()
 
