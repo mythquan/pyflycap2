@@ -721,6 +721,54 @@ cdef class Camera(CameraContext):
             p.absControl = absolute
         check_ret( fc2SetProperty(self.context, &p))
 
+    def get_trigger_mode_info(self):
+        cdef fc2TriggerModeInfo trigger_mode_info
+        check_ret(fc2GetTriggerModeInfo(self.context, &trigger_mode_info))
+        print trigger_mode_info
+        return trigger_mode_info
+
+    def get_trigger_mode(self):
+        cdef fc2TriggerMode trigger_mode
+        check_ret(fc2GetTriggerMode(self.context, &trigger_mode))
+        print trigger_mode
+        return trigger_mode
+
+    def set_trigger_mode(self):
+        cdef fc2TriggerMode trigger_mode
+        check_ret(fc2GetTriggerMode(self.context, &trigger_mode))
+        trigger_mode.onOff = True
+        trigger_mode.mode = 0
+        trigger_mode.parameter = 0
+        trigger_mode.source = 0
+        check_ret(fc2SetTriggerMode(self.context, &trigger_mode))
+
+    def fire_software_trigger(self):
+        with nogil:
+            check_ret(fc2FireSoftwareTrigger(self.context))
+
+    def fire_software_trigger_broadcast(self):
+        with nogil:
+            check_ret(fc2FireSoftwareTriggerBroadcast(self.context))
+
+    def get_trigger_delay_info(self):
+        cdef fc2TriggerDelayInfo delay_info
+        check_ret(fc2GetTriggerDelayInfo(self.context, &delay_info))
+        print delay_info
+        return delay_info
+
+    def get_trigger_delay(self):
+        cdef fc2TriggerDelay delay
+        check_ret(fc2GetTriggerDelay(self.context, &delay))
+        print delay
+        return delay
+
+    def set_trigger_delay(self):
+        cdef fc2TriggerDelay delay
+        check_ret(fc2SetTriggerDelay(self.context, &delay))
+
+    def set_trigger_delay_broadcast(self):
+        cdef fc2TriggerDelay delay
+        check_ret(fc2SetTriggerDelayBroadcast(self.context, &delay))
 
 cdef class GUI(object):
 
