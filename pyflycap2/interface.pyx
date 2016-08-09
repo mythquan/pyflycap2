@@ -770,6 +770,17 @@ cdef class Camera(CameraContext):
         cdef fc2TriggerDelay delay
         check_ret(fc2SetTriggerDelayBroadcast(self.context, &delay))
 
+    def write_register(self, address, value):
+        cdef unsigned int _address = address
+        cdef unsigned int _value = value
+        check_ret(fc2WriteRegister(self.context, _address, _value))
+
+    def read_register(self, address, value):
+        cdef unsigned int _address = address
+        cdef unsigned int _value = value
+        check_ret(fc2ReadRegister(self.context, _address, &_value))
+        return _value
+
 cdef class GUI(object):
 
     def __cinit__(self, **kwargs):
