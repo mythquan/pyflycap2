@@ -552,6 +552,7 @@ cdef class Camera(CameraContext):
                 check_ret(fc2Connect(self.context, &self._guid))
             self.connected = True
             print 'connected', self.connected
+            return True
 
     def disconnect(self):
         if self.connected:
@@ -568,6 +569,7 @@ cdef class Camera(CameraContext):
         with nogil:
             check_ret(fc2StartCapture(self.context))
         print 'start_capture', True
+        return True
 
     def start_capture_sync(self, other_cams):
         cdef list cams = [self] + list(other_cams)
