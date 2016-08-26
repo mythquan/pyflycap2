@@ -520,7 +520,7 @@ cdef class Camera(CameraContext):
             check_ret(fc2GetGigEStreamChannelInfo(self.context, chan, &config))
         return {
             'net_index': config.networkInterfaceIndex,
-            'host_post': config.hostPost, 'frag': bool(config.doNotFragment),
+            'host_post': config.hostPort, 'frag': bool(config.doNotFragment),
             'packet_size': config.packetSize, 'delay': config.interPacketDelay,
             'dest_ip': [config.destinationIpAddress.octets[i] for i in range(4)],
             'src_port': config.sourcePort}
@@ -532,7 +532,7 @@ cdef class Camera(CameraContext):
         cdef fc2GigEStreamChannel config
 
         config.networkInterfaceIndex = net_index
-        config.hostPost = host_post
+        config.hostPort = host_post
         config.doNotFragment = frag
         config.packetSize = packet_size
         config.interPacketDelay = delay
