@@ -735,13 +735,13 @@ cdef class Camera(CameraContext):
         print trigger_mode
         return trigger_mode
 
-    def set_trigger_mode(self):
+    def set_trigger_mode(self, value):
         cdef fc2TriggerMode trigger_mode
         check_ret(fc2GetTriggerMode(self.context, &trigger_mode))
-        trigger_mode.onOff = True
-        trigger_mode.mode = 0
-        trigger_mode.parameter = 0
-        trigger_mode.source = 0
+        trigger_mode.onOff = value[0]
+        trigger_mode.mode = value[1]
+        trigger_mode.parameter = value[2]
+        trigger_mode.source = value[3]
         check_ret(fc2SetTriggerMode(self.context, &trigger_mode))
 
     def fire_software_trigger(self):
