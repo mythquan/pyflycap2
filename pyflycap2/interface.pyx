@@ -703,6 +703,10 @@ cdef class Camera(CameraContext):
                 "absValue": p.absValue,
                 "valueA": p.valueA,
                 "valueB": p.valueB}
+    def set_default_color_processing(self, alg_method):
+        cdef fc2ColorProcessingAlgorithm color_alg
+        color_alg = color_algos[alg_method]
+        check_ret(fc2SetDefaultColorProcessing(color_alg))
 
     def set_property_value(self, name, value, auto=False, absolute=True):
         cdef fc2Property p
